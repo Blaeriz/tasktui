@@ -1,14 +1,14 @@
-[todo1]
+[[todo]]
 name = "Buy groceries"
 completed = false
 description = "Buy milk, eggs, and bread from the store."
 
-[todo2]
+[[todo]]
 name = "Finish project"
 completed = true
 description = "Complete the final report for the Rust project."
 
-[todo3]
+[[todo]]
 name = "Clean the house"
 completed = false
 description = "Vacuum the living room and mop the floors."
