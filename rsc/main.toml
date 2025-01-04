@@ -1,0 +1,13 @@
+[todos]
+
+[todos.task1]
+description = "Implement TOML parsing for TUI"
+completed = false
+
+[todos.task2]
+description = "Render the parsed data in the UI"
+completed = true
+
+[todos.task3]
+description = "Add interaction to mark tasks as done"
+completed = false
