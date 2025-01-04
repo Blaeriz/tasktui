@@ -1,13 +1,14 @@
-[todos]
-
-[todos.task1]
-description = "Implement TOML parsing for TUI"
+[todo1]
+name = "Buy groceries"
 completed = false
+description = "Buy milk, eggs, and bread from the store."
 
-[todos.task2]
-description = "Render the parsed data in the UI"
+[todo2]
+name = "Finish project"
 completed = true
+description = "Complete the final report for the Rust project."
 
-[todos.task3]
-description = "Add interaction to mark tasks as done"
+[todo3]
+name = "Clean the house"
 completed = false
+description = "Vacuum the living room and mop the floors."

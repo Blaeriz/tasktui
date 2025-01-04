@@ -1,11 +1,12 @@
-use std::io;
+use std::{fs, io, error::Error};
 
-use color_eyre::Result;
+use color_eyre::{eyre::Ok, Result};
 use crossterm::event::{self, Event, KeyCode, KeyEventKind};
 use ratatui::{backend::{self, CrosstermBackend}, layout::{Constraint, Direction, Layout, Rect}, style::{Color, Modifier, Style}, text::Span, widgets::{Block, Borders, ListState, Paragraph}, DefaultTerminal, Frame, Terminal};
 use serde::Deserialize;
 
 fn main() -> Result<()> {
+
 
     color_eyre::install()?;
     let terminal = ratatui::init();
@@ -14,7 +15,24 @@ fn main() -> Result<()> {
     result
 }
 
+#[derive(Deserialize, Debug)]
+struct Task {
+    name: String,
+    completed: bool,
+    description: Option<String>,
+}
 
+#[derive(Deserialize)]
+struct ToDo{
+    todo: Vec<Task>,
+}
+
+fn parse_toml(path: &str) -> Result<ToDo> {
+    let content = fs::read_to_string("../rsc/main.toml")?;
+    let parsed_todos : ToDo = toml::from_str(&content)?;
+
+    Ok(parsed_todos)
+}
 
 struct App {
     exit: bool,
