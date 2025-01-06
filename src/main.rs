@@ -1,16 +1,14 @@
-use std::{fs, io};
+use std::{default, fs::{self, read}, io::Error};
 
 use color_eyre::Result;
 use ratatui::{
     buffer::Buffer,
     crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind},
     layout::{Constraint, Layout, Rect},
-    style::{Color, Modifier, Style, Stylize,},
-    symbols,
+    style::{Color, Style, Stylize,},
     text::Line,
     widgets::{
-        Block, Borders, HighlightSpacing, List, ListItem, ListState, Padding, Paragraph,
-        StatefulWidget, Widget, Wrap,
+        Block, Borders, HighlightSpacing, List, ListItem, ListState, Paragraph, StatefulWidget, Widget, Wrap
     },
     DefaultTerminal,
 };
@@ -31,19 +29,19 @@ struct App {
     todo_list: TodoList,
 }
 
+#[derive(serde::Deserialize)]
 struct TodoList {
     items: Vec<TodoItem>,
-    state: ListState,
 }
 
-#[derive(Debug)]
+#[derive(Debug, serde::Deserialize)]
 struct TodoItem {
     todo: String,
+    status: bool,
     info: String,
-    status: Status,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Deserialize)]
 enum Status {
     Todo,
     Completed,
@@ -51,33 +49,104 @@ enum Status {
 
 impl Default for App {
     fn default() -> Self {
+        // let read = fs::read_to_string("/rsc/main.toml").expect("couldnt read!!!!!");
+
+        // let tasks = match read {
+        //     Ok(content) => {
+        //     let parsed: Vec<TodoItem> = toml::from_str(&content).unwrap();
+        //     TodoList::from_items(parsed)
+        //     }
+            // Err(_) => TodoList::from_iter([
+            //     (false, "Rewrite everything with Rust!".to_string(), "I can't hold my inner voice. He tells me to rewrite the complete universe with Rust".to_string()),
+            // ]),
+        // };
+
+        // Read the TOML file
+        println!("{}", (fs::read_to_string("rsc/main.toml")).unwrap());
+
+        //type TodoList = Vec<(bool, String, String)>; 
+
+        let mut read_error= "".to_string();
+
+        let toml_str = match fs::read_to_string("rsc/main.toml") {
+            Ok(content) => {
+                read_error = content.to_owned();
+                content
+            },
+            Err(e) => {
+                read_error = e.to_string();
+                eprintln!("Failed to read TOML file: {}", e);
+                "couldnt read toml".to_string()
+            }
+        };
+
+        // Parse the TOML string into the Todos struct
+        let todos: TodoList = match toml::from_str(&toml_str) {
+            Ok(parsed) => {
+                parsed
+            },
+            Err(_e) => TodoList::from_iter([
+                ("Rewrite everything with Rust!".to_string(), false,  "I can't hold my inner voice. He tells me to rewrite the complete universe with Rust {e}".to_string()),
+            ]),
+        };
+
+        
+        let todos3: TodoList = toml::from_str(&toml_str).unwrap();
+        
+
+
+        let todos_test: TodoList = match toml::from_str(&toml_str) {
+            Ok(parsed) => parsed,
+            Err(e) => TodoList::from_iter([
+                ("Rewrite everything with Rust!".to_string(), false,  "I can' ".to_owned()+&read_error.to_string()),
+            ]),
+        };
+
+        let mut test1 = "";
+        let mut test2 = "";
+
+        for todo in &todos.items {
+            println!("Task: {}, Status: {}, Info: {}", todo.todo, todo.status, todo.info);
+            test1 = &todo.todo;
+            test2 = &todo.info;
+        }
+
+        let todos_as_tuples: Vec<(String, bool, String)> = todos
+        .items.iter()
+        .map(|item| {
+            let todo = item.todo.clone();
+            let status = item.status;
+            let info = item.info.clone();
+            (todo, status, info)
+        })
+        .collect();
+
+
         Self {
             should_exit: false,
-            todo_list: TodoList::from_iter([
-                (Status::Todo, "Rewrite everything with Rust!", "I can't hold my inner voice. He tells me to rewrite the complete universe with Rust"),
-                (Status::Completed, "Rewrite all of your tui apps with Ratatui", "Yes, you heard that right. Go and replace your tui with Ratatui."),
-                (Status::Todo, "Pet your cat", "Minnak loves to be pet by you! Don't forget to pet and give some treats!"),
-                (Status::Todo, "Walk with your dog", "Max is bored, go walk with him!"),
-                (Status::Completed, "Pay the bills", "Pay the train subscription!!!"),
-                (Status::Completed, "Refactor list example", "If you see this info that means I completed this task!"),
-            ]),
+            todo_list: TodoList::from_iter(todos_as_tuples),
         }
     }
 }
 
-impl FromIterator<(Status, &'static str, &'static str)> for TodoList {
-    fn from_iter<I: IntoIterator<Item = (Status, &'static str, &'static str)>>(iter: I) -> Self {
+impl FromIterator<(String, bool, String)> for TodoList {
+    fn from_iter<I: IntoIterator<Item = (String, bool, String)>>(iter: I) -> Self {
         let items = iter
             .into_iter()
-            .map(|(status, todo, info)| TodoItem::new(status, todo, info))
+            .map(|(todo, status, info)| TodoItem::new(status, todo, info))
             .collect();
-        let state = ListState::default();
-        Self { items, state }
+        Self { items}
+    }
+}
+
+impl TodoList {
+    fn from_items(items: Vec<TodoItem>) -> Self {
+        Self { items,}
     }
 }
 
 impl TodoItem {
-    fn new(status: Status, todo: &str, info: &str) -> Self {
+    fn new(status: bool, todo: String, info: String) -> Self {
         Self {
             status,
             todo: todo.to_string(),
@@ -116,33 +185,32 @@ impl App {
     }
 
     fn select_none(&mut self) {
-        self.todo_list.state.select(None);
     }
 
     fn select_next(&mut self) {
-        self.todo_list.state.select_next();
     }
     fn select_previous(&mut self) {
-        self.todo_list.state.select_previous();
     }
 
     fn select_first(&mut self) {
-        self.todo_list.state.select_first();
     }
 
     fn select_last(&mut self) {
-        self.todo_list.state.select_last();
     }
 
-    /// Changes the status of the selected list item
     fn toggle_status(&mut self) {
-        if let Some(i) = self.todo_list.state.selected() {
-            self.todo_list.items[i].status = match self.todo_list.items[i].status {
-                Status::Completed => Status::Todo,
-                Status::Todo => Status::Completed,
-            }
-        }
+        
     }
+
+    // Changes the status of the selected list item
+    // fn toggle_status(&mut self) {
+    //     if let Some(i) = self.todo_list.state.selected() {
+    //         self.todo_list.items[i].status = match self.todo_list.items[i].status {
+    //             true => false,
+    //             false => true,
+    //         }
+    //     }
+    // }
 }
 
 impl Widget for &mut App {
@@ -208,15 +276,15 @@ impl App {
 
         // We need to disambiguate this trait method as both `Widget` and `StatefulWidget` share the
         // same method name `render`.
-        StatefulWidget::render(list, area, buf, &mut self.todo_list.state);
+        StatefulWidget::render(list, area, buf, &mut ListState::default());
     }
 
     fn render_selected_item(&self, area: Rect, buf: &mut Buffer) {
         // We get the info depending on the item's state.
-        let info = if let Some(i) = self.todo_list.state.selected() {
-            match self.todo_list.items[i].status {
-                Status::Completed => format!("✓ DONE: {}", self.todo_list.items[i].info),
-                Status::Todo => format!("☐ TODO: {}", self.todo_list.items[i].info),
+        let info = if let Some(i) = self.todo_list.items.get(0) {
+            match i.status {
+                false => format!("✓ DONE: {}", i.info),
+                true => format!("☐ TODO: {}", i.info),
             }
         } else {
             "Nothing selected...".to_string()
@@ -249,8 +317,8 @@ const fn alternate_colors(i: usize) -> Color {
 impl From<&TodoItem> for ListItem<'_> {
     fn from(value: &TodoItem) -> Self {
         let line = match value.status {
-            Status::Todo => Line::styled(format!(" ☐ {}", value.todo), FG),
-            Status::Completed => {
+            true => Line::styled(format!(" ☐ {}", value.todo), FG),
+            false => {
                 Line::styled(format!(" ✓ {}", value.todo), FG)
             }
         };

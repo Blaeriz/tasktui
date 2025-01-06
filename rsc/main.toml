@@ -1,14 +1,14 @@
-[[todo]]
-name = "Buy groceries"
-completed = false
-description = "Buy milk, eggs, and bread from the store."
+[[items]]
+todo = "Buy groceries"
+status = false
+info = "Buy milk, eggs, and bread from the store."
 
-[[todo]]
-name = "Finish project"
-completed = true
-description = "Complete the final report for the Rust project."
+[[items]]
+todo = "Finish project"
+status = true
+info = "Complete the final report for the Rust project."
 
-[[todo]]
-name = "Clean the house"
-completed = false
-description = "Vacuum the living room and mop the floors."
+[[items]]
+todo = "Clean the house"
+status = false
+info = "Vacuum the living room and mop the floors."
