@@ -1,4 +1,4 @@
-use std::{default, fs::{self, read}, io::Error};
+use std::{default, fs::{self, read}, io::Error, vec};
 
 use color_eyre::Result;
 use ratatui::{
@@ -12,6 +12,7 @@ use ratatui::{
     },
     DefaultTerminal,
 };
+use serde::{Serialize, Deserialize};
 
 const FG: Color = Color::Rgb(157, 146, 170);
 const BG: Color = Color::Rgb(44, 29, 58);
@@ -27,21 +28,22 @@ fn main() -> Result<()> {
 struct App {
     should_exit: bool,
     todo_list: TodoList,
+    state: ListState
 }
 
-#[derive(serde::Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 struct TodoList {
     items: Vec<TodoItem>,
 }
 
-#[derive(Debug, serde::Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 struct TodoItem {
     todo: String,
     status: bool,
     info: String,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Deserialize)]
 enum Status {
     Todo,
     Completed,
@@ -100,6 +102,7 @@ impl Default for App {
         Self {
             should_exit: false,
             todo_list: TodoList::from_iter(todos_as_tuples),
+            state: ListState::default(),
         }
     }
 }
@@ -160,32 +163,32 @@ impl App {
     }
 
     fn select_none(&mut self) {
+        self.state.select(None);
     }
 
     fn select_next(&mut self) {
+        self.state.select_next();
     }
     fn select_previous(&mut self) {
+        self.state.select_previous();
     }
 
     fn select_first(&mut self) {
+        self.state.select_first();
     }
 
     fn select_last(&mut self) {
+        self.state.select_last();
     }
 
     fn toggle_status(&mut self) {
-        
+        if let Some(i) = self.state.selected() {
+            self.todo_list.items[i].status = match self.todo_list.items[i].status {
+                true => false,
+                false => true,
+            }
+        }
     }
-
-    // Changes the status of the selected list item
-    // fn toggle_status(&mut self) {
-    //     if let Some(i) = self.todo_list.state.selected() {
-    //         self.todo_list.items[i].status = match self.todo_list.items[i].status {
-    //             true => false,
-    //             false => true,
-    //         }
-    //     }
-    // }
 }
 
 impl Widget for &mut App {
@@ -251,15 +254,15 @@ impl App {
 
         // We need to disambiguate this trait method as both `Widget` and `StatefulWidget` share the
         // same method name `render`.
-        StatefulWidget::render(list, area, buf, &mut ListState::default());
+        StatefulWidget::render(list, area, buf, &mut self.state);
     }
 
     fn render_selected_item(&self, area: Rect, buf: &mut Buffer) {
         // We get the info depending on the item's state.
-        let info = if let Some(i) = self.todo_list.items.get(0) {
-            match i.status {
-                false => format!("✓ DONE: {}", i.info),
-                true => format!("☐ TODO: {}", i.info),
+        let info = if let Some(i) = self.state.selected() {
+            match self.todo_list.items[i].status {
+                true => format!("✓ DONE: {}", self.todo_list.items[i].info),
+                false => format!("☐ TODO: {}", self.todo_list.items[i].info),
             }
         } else {
             "Nothing selected...".to_string()
@@ -292,8 +295,8 @@ const fn alternate_colors(i: usize) -> Color {
 impl From<&TodoItem> for ListItem<'_> {
     fn from(value: &TodoItem) -> Self {
         let line = match value.status {
-            true => Line::styled(format!(" ☐ {}", value.todo), FG),
-            false => {
+            false => Line::styled(format!(" ☐ {}", value.todo), FG),
+            true => {
                 Line::styled(format!(" ✓ {}", value.todo), FG)
             }
         };
