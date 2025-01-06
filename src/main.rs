@@ -66,15 +66,11 @@ impl Default for App {
 
         //type TodoList = Vec<(bool, String, String)>; 
 
-        let mut read_error= "".to_string();
-
         let toml_str = match fs::read_to_string("rsc/main.toml") {
             Ok(content) => {
-                read_error = content.to_owned();
                 content
             },
             Err(e) => {
-                read_error = e.to_string();
                 eprintln!("Failed to read TOML file: {}", e);
                 "couldnt read toml".to_string()
             }
@@ -89,27 +85,6 @@ impl Default for App {
                 ("Rewrite everything with Rust!".to_string(), false,  "I can't hold my inner voice. He tells me to rewrite the complete universe with Rust {e}".to_string()),
             ]),
         };
-
-        
-        let todos3: TodoList = toml::from_str(&toml_str).unwrap();
-        
-
-
-        let todos_test: TodoList = match toml::from_str(&toml_str) {
-            Ok(parsed) => parsed,
-            Err(e) => TodoList::from_iter([
-                ("Rewrite everything with Rust!".to_string(), false,  "I can' ".to_owned()+&read_error.to_string()),
-            ]),
-        };
-
-        let mut test1 = "";
-        let mut test2 = "";
-
-        for todo in &todos.items {
-            println!("Task: {}, Status: {}, Info: {}", todo.todo, todo.status, todo.info);
-            test1 = &todo.todo;
-            test2 = &todo.info;
-        }
 
         let todos_as_tuples: Vec<(String, bool, String)> = todos
         .items.iter()
