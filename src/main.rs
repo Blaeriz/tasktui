@@ -1,6 +1,8 @@
+use core::panic;
 use std::{default, fs::{self, read}, io::Error, vec};
 
 use color_eyre::Result;
+use itertools::WhileSome;
 use ratatui::{
     buffer::Buffer,
     crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind},
@@ -31,6 +33,7 @@ struct App {
     todo_list: TodoList,
     state: ListState,
     add_new_state: bool,
+    input_box: InputBox,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -43,6 +46,54 @@ struct TodoItem {
     todo: String,
     status: bool,
     info: String,
+}
+
+struct InputBox {
+    todo: String,
+    desc: String,
+    active: ActiveTodo,
+}
+
+enum ActiveTodo {
+    Todo,
+    Desc,
+}
+
+impl InputBox {
+    fn new() -> Self {
+        Self {
+            todo: String::default(),
+            desc: String::default(),
+            active: ActiveTodo::Todo,
+        }
+    }
+
+    fn render_popup(& self, area: Rect, buf: &mut Buffer ) {
+        // Paragraph::new(self.todo.as_str())
+        //     .style(Style::default())
+        //     .block(Block::bordered().title("Input"));
+        Paragraph::new(self.todo.as_str())
+            .style(match self.active {
+                ActiveTodo::Todo => Style::default(),
+                ActiveTodo::Desc => Style::default().fg(Color::Yellow),
+            })
+            .block(Block::bordered().title("Input")).render(area, buf);
+    }
+
+    fn handle_input(&mut self, event: Event, mut input_box: InputBox) {
+        if let Event::Key(key) = event {
+            match key.code {
+                KeyCode::Char(c) => input_box.todo.push(c), // Add character to input
+                KeyCode::Backspace => {
+                    self.todo.pop(); // Remove last character
+                }
+                KeyCode::Enter => {
+                    
+                }, // Submit input
+                _ => {}
+            }
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Deserialize)]
@@ -94,7 +145,8 @@ impl Default for App {
             should_exit: false,
             todo_list: TodoList::from_iter(todos_as_tuples),
             state: ListState::default(),
-            add_new_state: false
+            add_new_state: false,
+            input_box: InputBox::new(),
         }
     }
 }
@@ -140,8 +192,24 @@ impl App {
         if key.kind != KeyEventKind::Press {
             return;
         }
+        if self.add_new_state {
+            match key.code {
+                KeyCode::Esc => {
+                    self.add_new_state = false; // Close popup on ESC
+                }
+                KeyCode::Enter => {
+                    self.add_new_state = false;
+                    println!("User input: {}", self.input_box.todo);
+                }
+                KeyCode::Char(c) => self.input_box.todo.push(c),
+                KeyCode::Backspace => {
+                    self.input_box.todo.pop(); // Remove last character
+                }
+                _ => {}
+            }
+        }
         match key.code {
-            KeyCode::Char('q') | KeyCode::Esc => self.should_exit = true,
+            KeyCode::Char('q') => self.should_exit = true,
             KeyCode::Char('h') | KeyCode::Left => self.select_none(),
             KeyCode::Char('j') | KeyCode::Down => self.select_next(),
             KeyCode::Char('k') | KeyCode::Up => self.select_previous(),
@@ -150,7 +218,7 @@ impl App {
             KeyCode::Char('a') => {
                 self.add_new_state();
             },
-            KeyCode::Char('l') | KeyCode::Right | KeyCode::Enter => {
+            KeyCode::Char('l') | KeyCode::Right => {
                 self.toggle_status();
             }
             _ => {}
@@ -177,8 +245,37 @@ impl App {
     }
 
     fn add_new_state(&mut self) {
-        self.add_new_state = !self.add_new_state;
+        self.add_new_state = true;
     }
+
+    fn handle_new_input(&mut self, key: KeyEvent) {
+        match key.code {
+            // KeyCode::Esc => {
+            //     self.add_new_state = false; // Close popup on ESC
+            // }
+            // KeyCode::Enter => {
+            //     self.add_new_state = !self.add_new_state;
+            //     panic!("User input: {}", self.input_box.todo);
+            // }
+            // KeyCode::Char(c) => self.input_box.todo.push(c), // Add character to input
+            // KeyCode::Backspace => {
+            //     self.input_box.todo.pop(); // Remove last character
+            // }
+            _ => {
+                //self.input_box.handle_input(Event::Key(key), self.input_box)
+                // match key.code {
+                    
+                //     KeyCode::Enter => {
+                //         self.add_new_state = !self.add_new_state;
+                //         panic!("User input: {}", self.input_box.todo);
+                //     }, // Submit input
+                //     _ => {panic!("NO USER INPUT!")}
+                // }
+                
+            }
+        }
+    }
+
 
     fn toggle_status(&mut self) {
         if let Some(i) = self.state.selected() {
@@ -215,26 +312,14 @@ impl Widget for &mut App {
         };
 
         if self.add_new_state {
-            self.add_new(popup_area, buf);
+            self.input_box.render_popup(popup_area, buf);
+            self.input_box.active = ActiveTodo::Todo;
         }
 
     }
 }
 
 impl App {
-    fn add_new(&mut self, area: Rect, buf: &mut Buffer){
-
-        Paragraph::new("Hello world!")
-        .wrap(Wrap { trim: true })
-        .style(Style::new().yellow())
-        .block(
-            Block::new()
-                .title("Without Clear")
-                .title_style(Style::new().white().bold())
-                .borders(Borders::ALL)
-                .border_style(Style::new().red()),
-        ).render(area, buf);
-    }
 
     fn render_header(area: Rect, buf: &mut Buffer) {
         Paragraph::new("Ratatui List Example")
