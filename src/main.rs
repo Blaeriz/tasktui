@@ -1,18 +1,16 @@
-use core::panic;
-use std::{default, fs::{self, read}, io::Error, vec};
+use std::fs::{self};
 
 use color_eyre::Result;
-use itertools::WhileSome;
 use ratatui::{
     buffer::Buffer,
     crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind},
-    layout::{Constraint, Layout, Rect},
+    layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Style, Stylize,},
     text::Line,
     widgets::{
         Block, Borders, HighlightSpacing, List, ListItem, ListState, Paragraph, StatefulWidget, Widget, Wrap
     },
-    DefaultTerminal, Frame,
+    DefaultTerminal
 };
 use serde::{Serialize, Deserialize};
 
@@ -69,15 +67,28 @@ impl InputBox {
     }
 
     fn render_popup(& self, area: Rect, buf: &mut Buffer ) {
-        // Paragraph::new(self.todo.as_str())
-        //     .style(Style::default())
-        //     .block(Block::bordered().title("Input"));
+        let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Percentage(30), Constraint::Percentage(70)])
+        .split(area);
+
+        // Render the first text input field (10% space)
         Paragraph::new(self.todo.as_str())
             .style(match self.active {
-                ActiveTodo::Todo => Style::default(),
-                ActiveTodo::Desc => Style::default().fg(Color::Yellow),
+                ActiveTodo::Todo => Style::default().fg(Color::Yellow),
+                ActiveTodo::Desc => Style::default(),
             })
-            .block(Block::bordered().title("Input")).render(area, buf);
+            .block(Block::default().borders(Borders::ALL).title("Title"))
+            .render(chunks[0], buf);
+
+        // Render the second text input field (90% space)
+        Paragraph::new(self.desc.as_str())
+            .style(match self.active {
+                ActiveTodo::Desc => Style::default().fg(Color::Yellow),
+                ActiveTodo::Todo => Style::default(),
+            })
+            .block(Block::default().borders(Borders::ALL).title("Description"))
+            .render(chunks[1], buf);
     }
 }
 
@@ -172,43 +183,93 @@ impl App {
             return;
         }
         if self.add_new_state {
-            match key.code {
-                KeyCode::Esc => {
-                    self.add_new_state = false; // Close popup on ESC
-                }
-                KeyCode::Enter => {
-                    if self.input_box.todo.is_empty() {
-                        self.add_new_state = false;
-                    }else {
-                        let file_path = "./rsc/main.toml";
-
-                        let toml_data = fs::read_to_string(file_path).unwrap_or_else(|_| String::from("[[items]]\n"));
-
-                        let mut todo_list: TodoList = toml::from_str(&toml_data).unwrap_or(TodoList { items: Vec::new() });
-
-                        let todo_item: TodoItem = TodoItem {
-                            todo: self.input_box.todo.clone(),
-                            status: false,
-                            info: self.input_box.desc.clone(),
-                        };
-
-                        todo_list.items.push(todo_item.clone());
-
-                        self.todo_list.items.push(todo_item);
-
-                        let updated_toml = toml::to_string(&todo_list).unwrap();
-
-                        fs::write(file_path, updated_toml).unwrap();
-
-
-                        self.add_new_state = false;
+            match self.input_box.active {
+                ActiveTodo::Todo => {
+                    match key.code {
+                        KeyCode::Esc => {
+                            self.add_new_state = false; // Close popup on ESC
+                        }
+                        KeyCode::Tab => {
+                            self.input_box.active = ActiveTodo::Desc;
+                        }
+                        KeyCode::Enter => {
+                            if self.input_box.todo.is_empty() {
+                                self.add_new_state = false;
+                            }else {
+                                let file_path = "./rsc/main.toml";
+        
+                                let toml_data = fs::read_to_string(file_path).unwrap_or_else(|_| String::from("[[items]]\n"));
+        
+                                let mut todo_list: TodoList = toml::from_str(&toml_data).unwrap_or(TodoList { items: Vec::new() });
+        
+                                let todo_item: TodoItem = TodoItem {
+                                    todo: self.input_box.todo.clone(),
+                                    status: false,
+                                    info: self.input_box.desc.clone(),
+                                };
+        
+                                todo_list.items.push(todo_item.clone());
+        
+                                self.todo_list.items.push(todo_item);
+        
+                                let updated_toml = toml::to_string(&todo_list).unwrap();
+        
+                                fs::write(file_path, updated_toml).unwrap();
+        
+        
+                                self.add_new_state = false;
+                            }
+                        }
+                        KeyCode::Char(c) => self.input_box.todo.push(c),
+                        KeyCode::Backspace => {
+                            self.input_box.todo.pop(); // Remove last character
+                        }
+                        _ => {}
                     }
                 }
-                KeyCode::Char(c) => self.input_box.todo.push(c),
-                KeyCode::Backspace => {
-                    self.input_box.todo.pop(); // Remove last character
+                ActiveTodo::Desc => {
+                    match key.code {
+                        KeyCode::Esc => {
+                            self.add_new_state = false; // Close popup on ESC
+                        }
+                        KeyCode::Tab => {
+                            self.input_box.active = ActiveTodo::Todo;
+                        }
+                        KeyCode::Enter => {
+                            if self.input_box.todo.is_empty() {
+                                self.add_new_state = false;
+                            }else {
+                                let file_path = "./rsc/main.toml";
+        
+                                let toml_data = fs::read_to_string(file_path).unwrap_or_else(|_| String::from("[[items]]\n"));
+        
+                                let mut todo_list: TodoList = toml::from_str(&toml_data).unwrap_or(TodoList { items: Vec::new() });
+        
+                                let todo_item: TodoItem = TodoItem {
+                                    todo: self.input_box.todo.clone(),
+                                    status: false,
+                                    info: self.input_box.desc.clone(),
+                                };
+        
+                                todo_list.items.push(todo_item.clone());
+        
+                                self.todo_list.items.push(todo_item);
+        
+                                let updated_toml = toml::to_string(&todo_list).unwrap();
+        
+                                fs::write(file_path, updated_toml).unwrap();
+        
+        
+                                self.add_new_state = false;
+                            }
+                        }
+                        KeyCode::Char(c) => self.input_box.desc.push(c),
+                        KeyCode::Backspace => {
+                            self.input_box.desc.pop(); // Remove last character
+                        }
+                        _ => {}
+                    }
                 }
-                _ => {}
             }
         }
         match key.code {
@@ -287,7 +348,6 @@ impl Widget for &mut App {
 
         if self.add_new_state {
             self.input_box.render_popup(popup_area, buf);
-            self.input_box.active = ActiveTodo::Todo;
         }
 
     }

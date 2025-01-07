@@ -14,6 +14,6 @@ status = false
 info = "Vacuum the living room and mop the floors."
 
 [[items]]
-todo = "hellow"
+todo = "hello"
 status = false
-info = "Inquire about the loan interest rates."
+info = "hi"
