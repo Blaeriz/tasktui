@@ -41,7 +41,7 @@ struct TodoList {
     items: Vec<TodoItem>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 struct TodoItem {
     todo: String,
     status: bool,
@@ -146,12 +146,6 @@ impl FromIterator<(String, bool, String)> for TodoList {
     }
 }
 
-impl TodoList {
-    fn from_items(items: Vec<TodoItem>) -> Self {
-        Self { items,}
-    }
-}
-
 impl TodoItem {
     fn new(status: bool, todo: String, info: String) -> Self {
         Self {
@@ -183,8 +177,32 @@ impl App {
                     self.add_new_state = false; // Close popup on ESC
                 }
                 KeyCode::Enter => {
-                    self.add_new_state = false;
-                    println!("User input: {}", self.input_box.todo);
+                    if self.input_box.todo.is_empty() {
+                        self.add_new_state = false;
+                    }else {
+                        let file_path = "./rsc/main.toml";
+
+                        let toml_data = fs::read_to_string(file_path).unwrap_or_else(|_| String::from("[[items]]\n"));
+
+                        let mut todo_list: TodoList = toml::from_str(&toml_data).unwrap_or(TodoList { items: Vec::new() });
+
+                        let todo_item: TodoItem = TodoItem {
+                            todo: self.input_box.todo.clone(),
+                            status: false,
+                            info: self.input_box.desc.clone(),
+                        };
+
+                        todo_list.items.push(todo_item.clone());
+
+                        self.todo_list.items.push(todo_item);
+
+                        let updated_toml = toml::to_string(&todo_list).unwrap();
+
+                        fs::write(file_path, updated_toml).unwrap();
+
+
+                        self.add_new_state = false;
+                    }
                 }
                 KeyCode::Char(c) => self.input_box.todo.push(c),
                 KeyCode::Backspace => {

@@ -12,3 +12,8 @@ info = "Complete the final report for the Rust project."
 todo = "Clean the house"
 status = false
 info = "Vacuum the living room and mop the floors."
+
+[[items]]
+todo = "hellow"
+status = false
+info = "Inquire about the loan interest rates."
