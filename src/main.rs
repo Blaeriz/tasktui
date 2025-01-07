@@ -79,21 +79,6 @@ impl InputBox {
             })
             .block(Block::bordered().title("Input")).render(area, buf);
     }
-
-    fn handle_input(&mut self, event: Event, mut input_box: InputBox) {
-        if let Event::Key(key) = event {
-            match key.code {
-                KeyCode::Char(c) => input_box.todo.push(c), // Add character to input
-                KeyCode::Backspace => {
-                    self.todo.pop(); // Remove last character
-                }
-                KeyCode::Enter => {
-                    
-                }, // Submit input
-                _ => {}
-            }
-        }
-    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Deserialize)]
@@ -247,35 +232,6 @@ impl App {
     fn add_new_state(&mut self) {
         self.add_new_state = true;
     }
-
-    fn handle_new_input(&mut self, key: KeyEvent) {
-        match key.code {
-            // KeyCode::Esc => {
-            //     self.add_new_state = false; // Close popup on ESC
-            // }
-            // KeyCode::Enter => {
-            //     self.add_new_state = !self.add_new_state;
-            //     panic!("User input: {}", self.input_box.todo);
-            // }
-            // KeyCode::Char(c) => self.input_box.todo.push(c), // Add character to input
-            // KeyCode::Backspace => {
-            //     self.input_box.todo.pop(); // Remove last character
-            // }
-            _ => {
-                //self.input_box.handle_input(Event::Key(key), self.input_box)
-                // match key.code {
-                    
-                //     KeyCode::Enter => {
-                //         self.add_new_state = !self.add_new_state;
-                //         panic!("User input: {}", self.input_box.todo);
-                //     }, // Submit input
-                //     _ => {panic!("NO USER INPUT!")}
-                // }
-                
-            }
-        }
-    }
-
 
     fn toggle_status(&mut self) {
         if let Some(i) = self.state.selected() {
