@@ -1,7 +1,7 @@
 [[items]]
-todo = "Buy groceries"
+todo = "Buy grocerie"
 status = false
-info = "Buy milk, eggs, and bread from the store."
+info = "Buy milk, eggs, and bread from the store"
 
 [[items]]
 todo = "Finish project"

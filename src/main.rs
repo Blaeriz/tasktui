@@ -10,12 +10,13 @@ use ratatui::{
     widgets::{
         Block, Borders, HighlightSpacing, List, ListItem, ListState, Paragraph, StatefulWidget, Widget, Wrap
     },
-    DefaultTerminal,
+    DefaultTerminal, Frame,
 };
 use serde::{Serialize, Deserialize};
 
 const FG: Color = Color::Rgb(157, 146, 170);
 const BG: Color = Color::Rgb(44, 29, 58);
+
 
 fn main() -> Result<()> {
     color_eyre::install()?;
@@ -28,7 +29,8 @@ fn main() -> Result<()> {
 struct App {
     should_exit: bool,
     todo_list: TodoList,
-    state: ListState
+    state: ListState,
+    add_new_state: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -51,17 +53,6 @@ enum Status {
 
 impl Default for App {
     fn default() -> Self {
-        // let read = fs::read_to_string("/rsc/main.toml").expect("couldnt read!!!!!");
-
-        // let tasks = match read {
-        //     Ok(content) => {
-        //     let parsed: Vec<TodoItem> = toml::from_str(&content).unwrap();
-        //     TodoList::from_items(parsed)
-        //     }
-            // Err(_) => TodoList::from_iter([
-            //     (false, "Rewrite everything with Rust!".to_string(), "I can't hold my inner voice. He tells me to rewrite the complete universe with Rust".to_string()),
-            // ]),
-        // };
 
         // Read the TOML file
         println!("{}", (fs::read_to_string("rsc/main.toml")).unwrap());
@@ -103,6 +94,7 @@ impl Default for App {
             should_exit: false,
             todo_list: TodoList::from_iter(todos_as_tuples),
             state: ListState::default(),
+            add_new_state: false
         }
     }
 }
@@ -155,6 +147,9 @@ impl App {
             KeyCode::Char('k') | KeyCode::Up => self.select_previous(),
             KeyCode::Char('g') | KeyCode::Home => self.select_first(),
             KeyCode::Char('G') | KeyCode::End => self.select_last(),
+            KeyCode::Char('a') => {
+                self.add_new_state();
+            },
             KeyCode::Char('l') | KeyCode::Right | KeyCode::Enter => {
                 self.toggle_status();
             }
@@ -179,6 +174,10 @@ impl App {
 
     fn select_last(&mut self) {
         self.state.select_last();
+    }
+
+    fn add_new_state(&mut self) {
+        self.add_new_state = !self.add_new_state;
     }
 
     fn toggle_status(&mut self) {
@@ -207,10 +206,36 @@ impl Widget for &mut App {
         App::render_footer(footer_area, buf);
         self.render_list(list_area, buf);
         self.render_selected_item(item_area, buf);
+
+        let popup_area = Rect {
+            x: area.width / 4,
+            y: area.height / 3,
+            width: area.width / 2,
+            height: area.height / 3,
+        };
+
+        if self.add_new_state {
+            self.add_new(popup_area, buf);
+        }
+
     }
 }
 
 impl App {
+    fn add_new(&mut self, area: Rect, buf: &mut Buffer){
+
+        Paragraph::new("Hello world!")
+        .wrap(Wrap { trim: true })
+        .style(Style::new().yellow())
+        .block(
+            Block::new()
+                .title("Without Clear")
+                .title_style(Style::new().white().bold())
+                .borders(Borders::ALL)
+                .border_style(Style::new().red()),
+        ).render(area, buf);
+    }
+
     fn render_header(area: Rect, buf: &mut Buffer) {
         Paragraph::new("Ratatui List Example")
             .bold()
