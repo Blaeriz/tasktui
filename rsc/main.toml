@@ -12,8 +12,3 @@ info = "Complete the final report for the Rust project."
 todo = "Clean the house"
 status = false
 info = "Vacuum the living room and mop the floors."
-
-[[items]]
-todo = "hello"
-status = false
-info = "hi"

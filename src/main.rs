@@ -279,6 +279,8 @@ impl App {
             KeyCode::Char('k') | KeyCode::Up => self.select_previous(),
             KeyCode::Char('g') | KeyCode::Home => self.select_first(),
             KeyCode::Char('G') | KeyCode::End => self.select_last(),
+            KeyCode::Char('x') => self.handle_delete(),
+            KeyCode::Char('e') => self.handle_edit(),
             KeyCode::Char('a') => {
                 self.add_new_state();
             },
@@ -310,6 +312,30 @@ impl App {
 
     fn add_new_state(&mut self) {
         self.add_new_state = true;
+    }
+
+    fn handle_edit(&mut self) {
+        
+    }
+
+    fn handle_delete(&mut self) {
+        if let Some(i) = self.state.selected() {
+
+            // 1. Read the TOML file into a string
+            let contents = fs::read_to_string("./rsc/main.toml").unwrap();
+
+            // 2. Parse the TOML into a `TodoList` struct
+            let mut todo_list: TodoList = toml::from_str(&contents).unwrap();
+            
+            todo_list.items.remove(i);
+
+            let updated_toml = toml::to_string(&todo_list).unwrap();
+
+            fs::write("./rsc/main.toml", updated_toml).unwrap();
+            
+            
+            self.todo_list.items.remove(i);
+        }
     }
 
     fn toggle_status(&mut self) {
