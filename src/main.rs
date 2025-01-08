@@ -354,8 +354,7 @@ impl App {
 
 impl Widget for &mut App {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        let [header_area, main_area, footer_area] = Layout::vertical([
-            Constraint::Length(1),
+        let [main_area, footer_area] = Layout::vertical([
             Constraint::Fill(1),
             Constraint::Length(1),
         ])
@@ -364,7 +363,7 @@ impl Widget for &mut App {
         let [list_area, item_area] =
             Layout::horizontal([Constraint::Percentage(20), Constraint::Percentage(80)]).areas(main_area);
 
-        App::render_header(header_area, buf);
+        // App::render_header(header_area, buf);
         App::render_footer(footer_area, buf);
         self.render_list(list_area, buf);
         self.render_selected_item(item_area, buf);
@@ -453,6 +452,14 @@ impl App {
             .fg(FG)
             .wrap(Wrap { trim: false })
             .render(area, buf);
+    }
+}
+
+const fn alternate_colors(i: usize) -> Color {
+    if i % 2 == 0 {
+        BG
+    } else {
+        BG
     }
 }
 
