@@ -222,7 +222,7 @@ impl App {
                         }
                         KeyCode::Char(c) => self.input_box.todo.push(c),
                         KeyCode::Backspace => {
-                            self.input_box.todo.pop(); // Remove last character
+                            self.input_box.todo.pop();
                         }
                         _ => {}
                     }
@@ -265,29 +265,31 @@ impl App {
                         }
                         KeyCode::Char(c) => self.input_box.desc.push(c),
                         KeyCode::Backspace => {
-                            self.input_box.desc.pop(); // Remove last character
+                            self.input_box.desc.pop();
                         }
                         _ => {}
                     }
                 }
             }
         }
-        match key.code {
-            KeyCode::Char('q') => self.should_exit = true,
-            KeyCode::Char('h') | KeyCode::Left => self.select_none(),
-            KeyCode::Char('j') | KeyCode::Down => self.select_next(),
-            KeyCode::Char('k') | KeyCode::Up => self.select_previous(),
-            KeyCode::Char('g') | KeyCode::Home => self.select_first(),
-            KeyCode::Char('G') | KeyCode::End => self.select_last(),
-            KeyCode::Char('x') => self.handle_delete(),
-            KeyCode::Char('e') => self.handle_edit(),
-            KeyCode::Char('a') => {
-                self.add_new_state();
-            },
-            KeyCode::Char('l') | KeyCode::Right => {
-                self.toggle_status();
+        if !self.add_new_state {
+            match key.code {
+                KeyCode::Char('q') => self.should_exit = true,
+                KeyCode::Char('h') | KeyCode::Left => self.select_none(),
+                KeyCode::Char('j') | KeyCode::Down => self.select_next(),
+                KeyCode::Char('k') | KeyCode::Up => self.select_previous(),
+                KeyCode::Char('g') | KeyCode::Home => self.select_first(),
+                KeyCode::Char('G') | KeyCode::End => self.select_last(),
+                KeyCode::Char('x') => self.handle_delete(),
+                KeyCode::Char('e') => self.handle_edit(),
+                KeyCode::Char('a') => {
+                    self.add_new_state();
+                },
+                KeyCode::Char('l') | KeyCode::Right => {
+                    self.toggle_status();
+                }
+                _ => {}
             }
-            _ => {}
         }
     }
 
@@ -351,7 +353,7 @@ impl App {
 impl Widget for &mut App {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let [header_area, main_area, footer_area] = Layout::vertical([
-            Constraint::Length(2),
+            Constraint::Length(1),
             Constraint::Fill(1),
             Constraint::Length(1),
         ])
@@ -382,7 +384,7 @@ impl Widget for &mut App {
 impl App {
 
     fn render_header(area: Rect, buf: &mut Buffer) {
-        Paragraph::new("Ratatui List Example")
+        Paragraph::new(" To Do ")
             .bold()
             .fg(FG)
             .centered()
@@ -390,7 +392,7 @@ impl App {
     }
 
     fn render_footer(area: Rect, buf: &mut Buffer) {
-        Paragraph::new("Use ↓↑ to move, ← to unselect, → to change status, g/G to go top/bottom.")
+        Paragraph::new("Use ↓↑ to move, ← to unselect, → to change status, a to add new task, x to delete existing task. q to exit.")
         .fg(FG)
         .centered()
         .render(area, buf);
@@ -398,7 +400,7 @@ impl App {
 
     fn render_list(&mut self, area: Rect, buf: &mut Buffer) {
         let block = Block::new()
-            .title(Line::raw("TODO List"))
+            .title(Line::raw(" TODO "))
             .borders(Borders::ALL)
             .border_style(Style::new().fg(FG))
             .bg(BG);
@@ -422,8 +424,6 @@ impl App {
             .highlight_symbol(">")
             .highlight_spacing(HighlightSpacing::Always);
 
-        // We need to disambiguate this trait method as both `Widget` and `StatefulWidget` share the
-        // same method name `render`.
         StatefulWidget::render(list, area, buf, &mut self.state);
     }
 
@@ -440,7 +440,7 @@ impl App {
 
         // We show the list item's info under the list in this paragraph
         let block = Block::new()
-            .title(Line::raw("TODO Info").centered())
+            .title(Line::raw(" DESCRIPTION ").centered())
             .borders(Borders::ALL)
             .border_style(Style::new().fg(FG))
             .bg(BG);
