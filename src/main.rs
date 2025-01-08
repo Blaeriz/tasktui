@@ -384,14 +384,6 @@ impl Widget for &mut App {
 
 impl App {
 
-    fn render_header(area: Rect, buf: &mut Buffer) {
-        Paragraph::new(" To Do ")
-            .bold()
-            .fg(FG)
-            .centered()
-            .render(area, buf);
-    }
-
     fn render_footer(area: Rect, buf: &mut Buffer) {
         Paragraph::new("Use ↓↑ to move, ← to unselect, → to change status, a to add new task, x to delete existing task. q to exit.")
         .fg(FG)
