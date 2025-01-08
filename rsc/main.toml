@@ -1,14 +1,9 @@
 [[items]]
-todo = "Buy grocerie"
+todo = "Feature 1"
 status = false
-info = "Buy milk, eggs, and bread from the store"
+info = "change 'add_new_state' to an enum of 'State' for future proofing"
 
 [[items]]
-todo = "Finish project"
-status = true
-info = "Complete the final report for the Rust project."
-
-[[items]]
-todo = "Clean the house"
+todo = "Feature 2"
 status = false
-info = "Vacuum the living room and mop the floors."
+info = "Handle all the 'unwraps' gracefully. Maybe the program does not have the perms to edit a directory."

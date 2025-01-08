@@ -126,14 +126,19 @@ impl Default for App {
             ]),
         };
 
-        let todos_as_tuples: Vec<(String, bool, String)> = todos
-        .items.iter()
-        .map(|item| {
-            let todo = item.todo.clone();
-            let status = item.status;
-            let info = item.info.clone();
-            (todo, status, info)
-        })
+        // let todos_as_tuples: Vec<(String, bool, String)> = todos
+        // .items.iter()
+        // .map(|item| {
+        //     let todo = item.todo.clone();
+        //     let status = item.status;
+        //     let info = item.info.clone();
+        //     (todo, status, info)
+        // })
+        // .collect();
+
+        let todos_as_tuples: Vec<(String, bool, String)> = todos.items
+        .iter()
+        .map(|item| (item.todo.to_string(), item.status, item.info.to_string()))
         .collect();
 
 
@@ -342,10 +347,7 @@ impl App {
 
     fn toggle_status(&mut self) {
         if let Some(i) = self.state.selected() {
-            self.todo_list.items[i].status = match self.todo_list.items[i].status {
-                true => false,
-                false => true,
-            }
+            self.todo_list.items[i].status = !self.todo_list.items[i].status;
         }
     }
 }
@@ -451,14 +453,6 @@ impl App {
             .fg(FG)
             .wrap(Wrap { trim: false })
             .render(area, buf);
-    }
-}
-
-const fn alternate_colors(i: usize) -> Color {
-    if i % 2 == 0 {
-        BG
-    } else {
-        BG
     }
 }
 
