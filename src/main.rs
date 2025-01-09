@@ -1,4 +1,4 @@
-use std::{env, fs::{self, create_dir_all, File}, path::{Path, PathBuf}, io::Write};
+use std::fs::{self, File};
 
 use color_eyre::Result;
 use home::home_dir;
