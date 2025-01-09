@@ -22,8 +22,8 @@ const BG: Color = Color::Rgb(44, 29, 58);
 fn main() -> Result<()> {
     let home_dir = home_dir().expect("Failed to get home directory");
 
-    // Construct the path to the ~/.config/todotui directory and the main.toml file
-    let config_dir = home_dir.join(".config").join("todotui");
+    // Construct the path to the ~/.config/tasktui directory and the main.toml file
+    let config_dir = home_dir.join(".config").join("tasktui");
     let file_path = config_dir.join("main.toml");
 
     // Check if the config directory exists, if not, create it
@@ -120,8 +120,8 @@ impl Default for App {
 
         let home_dir = home_dir().expect("Failed to get home directory");
 
-        // Construct the path to the ~/.config/todotui directory and the main.toml file
-        let config_dir = home_dir.join(".config").join("todotui");
+        // Construct the path to the ~/.config/tasktui directory and the main.toml file
+        let config_dir = home_dir.join(".config").join("tasktui");
         let file_path = config_dir.join("main.toml");
 
         let toml_str = match fs::read_to_string(file_path) {
@@ -219,8 +219,8 @@ impl App {
                             }else {
                                 let home_dir = home_dir().expect("Failed to get home directory");
 
-                                // Construct the path to the ~/.config/todotui directory and the main.toml file
-                                let config_dir = home_dir.join(".config").join("todotui");
+                                // Construct the path to the ~/.config/tasktui directory and the main.toml file
+                                let config_dir = home_dir.join(".config").join("tasktui");
                                 let file_path = config_dir.join("main.toml");
         
                                 let toml_data = fs::read_to_string(file_path.clone()).unwrap_or_else(|_| String::from("[[items]]\n"));
@@ -266,8 +266,8 @@ impl App {
                             }else {
                                 let home_dir = home_dir().expect("Failed to get home directory");
 
-                                // Construct the path to the ~/.config/todotui directory and the main.toml file
-                                let config_dir = home_dir.join(".config").join("todotui");
+                                // Construct the path to the ~/.config/tasktui directory and the main.toml file
+                                let config_dir = home_dir.join(".config").join("tasktui");
                                 let file_path = config_dir.join("main.toml");
         
                                 let toml_data = fs::read_to_string(&file_path).unwrap_or_else(|_| String::from("[[items]]\n"));
@@ -354,8 +354,8 @@ impl App {
 
             let home_dir = home_dir().expect("Failed to get home directory");
 
-            // Construct the path to the ~/.config/todotui directory and the main.toml file
-            let config_dir = home_dir.join(".config").join("todotui");
+            // Construct the path to the ~/.config/tasktui directory and the main.toml file
+            let config_dir = home_dir.join(".config").join("tasktui");
             let file_path = config_dir.join("main.toml");
 
             // 1. Read the TOML file into a string
@@ -379,8 +379,8 @@ impl App {
         if let Some(i) = self.state.selected() {
             let home_dir = home_dir().expect("Failed to get home directory");
 
-            // Construct the path to the ~/.config/todotui directory and the main.toml file
-            let config_dir = home_dir.join(".config").join("todotui");
+            // Construct the path to the ~/.config/tasktui directory and the main.toml file
+            let config_dir = home_dir.join(".config").join("tasktui");
             let file_path = config_dir.join("main.toml");
 
             // 1. Read the TOML file into a string
