@@ -377,6 +377,24 @@ impl App {
 
     fn toggle_status(&mut self) {
         if let Some(i) = self.state.selected() {
+            let home_dir = home_dir().expect("Failed to get home directory");
+
+            // Construct the path to the ~/.config/todotui directory and the main.toml file
+            let config_dir = home_dir.join(".config").join("todotui");
+            let file_path = config_dir.join("main.toml");
+
+            // 1. Read the TOML file into a string
+            let contents = fs::read_to_string(&file_path).unwrap();
+
+            // 2. Parse the TOML into a `TodoList` struct
+            let mut todo_list: TodoList = toml::from_str(&contents).unwrap();
+            
+            todo_list.items[i].status = !todo_list.items[i].status;
+
+            let updated_toml = toml::to_string(&todo_list).unwrap();
+
+            fs::write(file_path, updated_toml).unwrap();
+
             self.todo_list.items[i].status = !self.todo_list.items[i].status;
         }
     }
