@@ -1,6 +1,7 @@
-use std::fs::{self};
+use std::{env, fs::{self, create_dir_all, File}, path::{Path, PathBuf}, io::Write};
 
 use color_eyre::Result;
+use home::home_dir;
 use ratatui::{
     buffer::Buffer,
     crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind},
@@ -19,6 +20,22 @@ const BG: Color = Color::Rgb(44, 29, 58);
 
 
 fn main() -> Result<()> {
+    let home_dir = home_dir().expect("Failed to get home directory");
+
+    // Construct the path to the ~/.config/todotui directory and the main.toml file
+    let config_dir = home_dir.join(".config").join("todotui");
+    let file_path = config_dir.join("main.toml");
+
+    // Check if the config directory exists, if not, create it
+    if !config_dir.exists() {
+        fs::create_dir_all(&config_dir)?; // Create the directory and its parents if necessary
+    }
+
+    // Check if the file exists
+    if !file_path.exists() {
+        File::create(&file_path)?;
+    }
+
     color_eyre::install()?;
     let terminal = ratatui::init();
     let result = App::default().run(terminal);
@@ -101,12 +118,13 @@ enum Status {
 impl Default for App {
     fn default() -> Self {
 
-        // Read the TOML file
-        println!("{}", (fs::read_to_string("rsc/main.toml")).unwrap());
+        let home_dir = home_dir().expect("Failed to get home directory");
 
-        //type TodoList = Vec<(bool, String, String)>; 
+        // Construct the path to the ~/.config/todotui directory and the main.toml file
+        let config_dir = home_dir.join(".config").join("todotui");
+        let file_path = config_dir.join("main.toml");
 
-        let toml_str = match fs::read_to_string("rsc/main.toml") {
+        let toml_str = match fs::read_to_string(file_path) {
             Ok(content) => {
                 content
             },
@@ -121,9 +139,7 @@ impl Default for App {
             Ok(parsed) => {
                 parsed
             },
-            Err(_e) => TodoList::from_iter([
-                ("Rewrite everything with Rust!".to_string(), false,  "I can't hold my inner voice. He tells me to rewrite the complete universe with Rust {e}".to_string()),
-            ]),
+            Err(_e) => {TodoList::from_iter([])}
         };
 
         // let todos_as_tuples: Vec<(String, bool, String)> = todos
@@ -201,9 +217,13 @@ impl App {
                             if self.input_box.todo.is_empty() {
                                 self.add_new_state = false;
                             }else {
-                                let file_path = "./rsc/main.toml";
+                                let home_dir = home_dir().expect("Failed to get home directory");
+
+                                // Construct the path to the ~/.config/todotui directory and the main.toml file
+                                let config_dir = home_dir.join(".config").join("todotui");
+                                let file_path = config_dir.join("main.toml");
         
-                                let toml_data = fs::read_to_string(file_path).unwrap_or_else(|_| String::from("[[items]]\n"));
+                                let toml_data = fs::read_to_string(file_path.clone()).unwrap_or_else(|_| String::from("[[items]]\n"));
         
                                 let mut todo_list: TodoList = toml::from_str(&toml_data).unwrap_or(TodoList { items: Vec::new() });
         
@@ -244,9 +264,13 @@ impl App {
                             if self.input_box.todo.is_empty() {
                                 self.add_new_state = false;
                             }else {
-                                let file_path = "./rsc/main.toml";
+                                let home_dir = home_dir().expect("Failed to get home directory");
+
+                                // Construct the path to the ~/.config/todotui directory and the main.toml file
+                                let config_dir = home_dir.join(".config").join("todotui");
+                                let file_path = config_dir.join("main.toml");
         
-                                let toml_data = fs::read_to_string(file_path).unwrap_or_else(|_| String::from("[[items]]\n"));
+                                let toml_data = fs::read_to_string(&file_path).unwrap_or_else(|_| String::from("[[items]]\n"));
         
                                 let mut todo_list: TodoList = toml::from_str(&toml_data).unwrap_or(TodoList { items: Vec::new() });
         
@@ -328,8 +352,14 @@ impl App {
     fn handle_delete(&mut self) {
         if let Some(i) = self.state.selected() {
 
+            let home_dir = home_dir().expect("Failed to get home directory");
+
+            // Construct the path to the ~/.config/todotui directory and the main.toml file
+            let config_dir = home_dir.join(".config").join("todotui");
+            let file_path = config_dir.join("main.toml");
+
             // 1. Read the TOML file into a string
-            let contents = fs::read_to_string("./rsc/main.toml").unwrap();
+            let contents = fs::read_to_string(&file_path).unwrap();
 
             // 2. Parse the TOML into a `TodoList` struct
             let mut todo_list: TodoList = toml::from_str(&contents).unwrap();
@@ -338,7 +368,7 @@ impl App {
 
             let updated_toml = toml::to_string(&todo_list).unwrap();
 
-            fs::write("./rsc/main.toml", updated_toml).unwrap();
+            fs::write(file_path, updated_toml).unwrap();
             
             
             self.todo_list.items.remove(i);

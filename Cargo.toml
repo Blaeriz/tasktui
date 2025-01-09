@@ -12,6 +12,7 @@ license = "GPL-3.0-or-later"
 [dependencies]
 color-eyre = "0.6.3"
 crossterm = "0.28.1"
+home = "0.5.11"
 ratatui = "0.29.0"
 serde = { version = "1.0.217", features = ["derive"] }
 toml = "0.5"
